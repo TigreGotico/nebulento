@@ -1,7 +1,9 @@
-from enum import IntEnum, auto
-from difflib import SequenceMatcher
-import rapidfuzz
 import logging
+from difflib import SequenceMatcher
+from enum import IntEnum, auto
+
+import rapidfuzz
+
 LOG = logging.getLogger('nebulento')
 
 
@@ -14,6 +16,7 @@ class MatchStrategy(IntEnum):
     PARTIAL_TOKEN_RATIO = auto()
     PARTIAL_TOKEN_SORT_RATIO = auto()
     PARTIAL_TOKEN_SET_RATIO = auto()
+    DAMERAU_LEVENSHTEIN_SIMILARITY = auto()
 
 
 def fuzzy_match(x, against, strategy=MatchStrategy.SIMPLE_RATIO):
@@ -36,6 +39,8 @@ def fuzzy_match(x, against, strategy=MatchStrategy.SIMPLE_RATIO):
         score = rapidfuzz.fuzz.partial_token_set_ratio(x, against) / 100
     elif strategy == MatchStrategy.PARTIAL_TOKEN_RATIO:
         score = rapidfuzz.fuzz.partial_token_ratio(x, against) / 100
+    elif strategy == MatchStrategy.DAMERAU_LEVENSHTEIN_SIMILARITY:
+        score = rapidfuzz.distance.DamerauLevenshtein.normalized_similarity(x, against)
     else:
         score = SequenceMatcher(None, x, against).ratio()
 
@@ -43,7 +48,7 @@ def fuzzy_match(x, against, strategy=MatchStrategy.SIMPLE_RATIO):
 
 
 def match_one(query, choices, match_func=None,
-              strategy=MatchStrategy.SIMPLE_RATIO):
+              strategy=MatchStrategy.DAMERAU_LEVENSHTEIN_SIMILARITY):
     """
         Find best match from a list or dictionary given an input
 
@@ -57,7 +62,7 @@ def match_one(query, choices, match_func=None,
 
 
 def match_all(query, choices, match_func=None,
-              strategy=MatchStrategy.SIMPLE_RATIO):
+              strategy=MatchStrategy.DAMERAU_LEVENSHTEIN_SIMILARITY):
     """
         match scores from a list or dictionary given an input
 
@@ -81,4 +86,3 @@ def match_all(query, choices, match_func=None,
         else:
             matches.append((c, match_func(query, c, strategy)))
     return sorted(matches, key=lambda k: k[1], reverse=True)
-

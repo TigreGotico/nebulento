@@ -1,26 +1,27 @@
-from nebulento import IntentContainer, MatchStrategy
 import unittest
+
+from nebulento import IntentContainer, MatchStrategy
 
 
 class TestIntentContainer(unittest.TestCase):
     def test_syntax(self):
         container = IntentContainer()
         container.add_intent('hello', ["(hello|hi|hey) world"])
-        self.assertEqual(container.registered_intents["hello"],
-                         ['hello world', 'hi world', 'hey world'])
+        self.assertEqual(set(container.registered_intents["hello"]),
+                         set(['hello world', 'hi world', 'hey world']))
 
         container = IntentContainer()
         container.add_intent('hello', ["hello (world|)"])
-        self.assertEqual(container.registered_intents["hello"],
-                         ['hello world', 'hello'])
+        self.assertEqual(set(container.registered_intents["hello"]),
+                         set(['hello world', 'hello']))
 
         container.add_intent('hey', ["hey [world]"])
-        self.assertEqual(container.registered_intents["hey"],
-                         ['hey world', 'hey'])
+        self.assertEqual(set(container.registered_intents["hey"]),
+                         set(['hey world', 'hey']))
 
         container.add_intent('hi', ["hi [{person}|people]"])
-        self.assertEqual(container.registered_intents["hi"],
-                         ['hi {person}', 'hi people', 'hi'])
+        self.assertEqual(set(container.registered_intents["hi"]),
+                         set(['hi {person}', 'hi people', 'hi']))
 
     # test intent parsing
     def test_intents(self):
@@ -38,7 +39,7 @@ class TestIntentContainer(unittest.TestCase):
                          {'best_match': 'hello',
                           'conf': 1.0,
                           'entities': {},
-                          'match_strategy': 'SIMPLE_RATIO',
+                          'match_strategy': 'DAMERAU_LEVENSHTEIN_SIMILARITY',
                           'name': 'hello',
                           'utterance': 'hello',
                           'utterance_consumed': 'hello',
@@ -46,18 +47,18 @@ class TestIntentContainer(unittest.TestCase):
 
         self.assertEqual(container.calc_intent('buy milk'),
                          {'best_match': 'buy {item}',
-                          'conf': 0.6666666666666667,
+                          'conf': 0.625,
                           'entities': {'item': ['milk']},
-                          'match_strategy': 'SIMPLE_RATIO',
+                          'match_strategy': 'DAMERAU_LEVENSHTEIN_SIMILARITY',
                           'name': 'buy',
                           'utterance': 'buy milk',
                           'utterance_consumed': 'buy milk',
                           'utterance_remainder': ''})
         self.assertEqual(container.calc_intent('buy beer'),
                          {'best_match': 'buy {item}',
-                          'conf': 0.5555555555555556,
+                          'conf': 0.5,
                           'entities': {},
-                          'match_strategy': 'SIMPLE_RATIO',
+                          'match_strategy': 'DAMERAU_LEVENSHTEIN_SIMILARITY',
                           'name': 'buy',
                           'utterance': 'buy beer',
                           'utterance_consumed': 'buy',
@@ -84,9 +85,9 @@ class TestIntentContainer(unittest.TestCase):
         self.assertEqual(
             container.calc_intent('I see a bin in there'),
             {'best_match': 'i see {thing} in {place}',
-             'conf': 0.5909090909090909,
+             'conf': 0.5416666666666667,
              'entities': {},
-             'match_strategy': 'SIMPLE_RATIO',
+             'match_strategy': 'DAMERAU_LEVENSHTEIN_SIMILARITY',
              'name': 'test3',
              'utterance': 'i see a bin in there',
              'utterance_consumed': 'i see in',
@@ -96,9 +97,9 @@ class TestIntentContainer(unittest.TestCase):
         self.assertEqual(
             container.calc_intent('I see trash in the floor'),
             {'best_match': 'i see {thing} in {place}',
-             'conf': 0.65625,
+             'conf': 0.53125,
              'entities': {'place': ['floor']},
-             'match_strategy': 'SIMPLE_RATIO',
+             'match_strategy': 'DAMERAU_LEVENSHTEIN_SIMILARITY',
              'name': 'test3',
              'utterance': 'i see trash in the floor',
              'utterance_consumed': 'i see in floor',
@@ -108,9 +109,9 @@ class TestIntentContainer(unittest.TestCase):
         self.assertEqual(
             container.calc_intent('I see food in the table'),
             {'best_match': 'i see {thing} in {place}',
-             'conf': 0.7007978723404256,
+             'conf': 0.6484375,
              'entities': {'place': ['table'], 'thing': ['food']},
-             'match_strategy': 'SIMPLE_RATIO',
+             'match_strategy': 'DAMERAU_LEVENSHTEIN_SIMILARITY',
              'name': 'test3',
              'utterance': 'i see food in the table',
              'utterance_consumed': 'i see in table food',
@@ -129,7 +130,7 @@ class TestIntentContainer(unittest.TestCase):
         ])
         self.assertEqual(container.calc_intent('buy milk'),
                          {'best_match': 'buy {item}',
-                          'conf': 0.71875,
+                          'conf': 0.6666666666666667,
                           'entities': {'item': ['milk']},
                           'match_strategy': 'TOKEN_SET_RATIO',
                           'name': 'buy',
@@ -138,7 +139,7 @@ class TestIntentContainer(unittest.TestCase):
                           'utterance_remainder': ''})
         self.assertEqual(container.calc_intent('buy beer'),
                          {'best_match': 'buy {item}',
-                          'conf': 0.625,
+                          'conf': 0.5555555555555556,
                           'entities': {},
                           'match_strategy': 'TOKEN_SET_RATIO',
                           'name': 'buy',
@@ -157,7 +158,7 @@ class TestIntentContainer(unittest.TestCase):
         ])
         self.assertEqual(container.calc_intent('buy milk'),
                          {'best_match': 'buy {item}',
-                          'conf': 0.71875,
+                          'conf': 0.6666666666666667,
                           'entities': {'item': ['milk']},
                           'match_strategy': 'TOKEN_SORT_RATIO',
                           'name': 'buy',
@@ -166,7 +167,7 @@ class TestIntentContainer(unittest.TestCase):
                           'utterance_remainder': ''})
         self.assertEqual(container.calc_intent('buy beer'),
                          {'best_match': 'buy {item}',
-                          'conf': 0.375,
+                          'conf': 0.33333333333333337,
                           'entities': {},
                           'match_strategy': 'TOKEN_SORT_RATIO',
                           'name': 'buy',
@@ -213,7 +214,7 @@ class TestIntentContainer(unittest.TestCase):
         ])
         self.assertEqual(container.calc_intent('buy milk'),
                          {'best_match': 'buy {item}',
-                          'conf': 0.71875,
+                          'conf': 0.7857142857142857,
                           'entities': {'item': ['milk']},
                           'match_strategy': 'PARTIAL_TOKEN_SORT_RATIO',
                           'name': 'buy',
@@ -222,7 +223,7 @@ class TestIntentContainer(unittest.TestCase):
                           'utterance_remainder': ''})
         self.assertEqual(container.calc_intent('buy beer'),
                          {'best_match': 'buy {item}',
-                          'conf': 0.375,
+                          'conf': 0.5454545454545454,
                           'entities': {},
                           'match_strategy': 'PARTIAL_TOKEN_SORT_RATIO',
                           'name': 'buy',

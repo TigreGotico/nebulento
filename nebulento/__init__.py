@@ -1,13 +1,13 @@
 import logging
 from nebulento.fuzz import MatchStrategy, match_one
-from nebulento.bracket_expansion import expand_parentheses
+from nebulento.bracket_expansion import expand_template, expand_slots
 import quebra_frases
 
 LOG = logging.getLogger('nebulento')
 
 
 class IntentContainer:
-    def __init__(self, fuzzy_strategy=MatchStrategy.SIMPLE_RATIO,
+    def __init__(self, fuzzy_strategy=MatchStrategy.DAMERAU_LEVENSHTEIN_SIMILARITY,
                  ignore_case=True):
         self.fuzzy_strategy = fuzzy_strategy
         self.ignore_case = ignore_case
@@ -60,7 +60,7 @@ class IntentContainer:
     def add_intent(self, name, lines):
         expanded = []
         for l in lines:
-            expanded += expand_parentheses(l)
+            expanded += expand_template(l)
         if self.ignore_case:
             expanded = [l.lower() for l in expanded]
         self.registered_intents[name] = expanded
@@ -72,7 +72,7 @@ class IntentContainer:
     def add_entity(self, name, lines):
         expanded = []
         for l in lines:
-            expanded += expand_parentheses(l)
+            expanded += expand_template(l)
         if self.ignore_case:
             expanded = [l.lower() for l in expanded]
         self.registered_entities[name] = expanded
