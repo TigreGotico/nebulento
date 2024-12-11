@@ -46,6 +46,9 @@ def get_description():
     return long_description
 
 
+PLUGIN_ENTRY_POINT = 'ovos-nebulento-pipeline-plugin=nebulento.opm:NebulentoPipeline'
+
+
 setup(
     name='nebulento',
     version=get_version(),
@@ -57,5 +60,6 @@ setup(
     install_requires=required('requirements.txt'),
     description='dead simple fuzzy matching intent parser',
     long_description=get_description(),
-    long_description_content_type="text/markdown"
+    long_description_content_type="text/markdown",
+    entry_points={'opm.pipeline': PLUGIN_ENTRY_POINT}
 )
