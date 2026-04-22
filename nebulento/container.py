@@ -1,9 +1,21 @@
+import re
 import logging
 from nebulento.fuzz import MatchStrategy, match_one
 from nebulento.bracket_expansion import expand_template, expand_slots
 import quebra_frases
 
 LOG = logging.getLogger('nebulento')
+
+_APOS = re.compile(r"[''ʼ]")
+_WS = re.compile(r"\s+")
+
+
+def _normalize(text: str, ignore_case: bool = True) -> str:
+    text = _APOS.sub("", text)
+    text = _WS.sub(" ", text).strip()
+    if ignore_case:
+        text = text.lower()
+    return text
 
 
 class IntentContainer:
@@ -19,8 +31,7 @@ class IntentContainer:
         return list(self.registered_intents)
 
     def match_entities(self, sentence):
-        if self.ignore_case:
-            sentence = sentence.lower()
+        sentence = _normalize(sentence, self.ignore_case)
         matches = {}
         for entity, samples in self.registered_entities.items():
             chunked = quebra_frases.chunk(sentence, samples)
@@ -28,8 +39,7 @@ class IntentContainer:
         return matches
 
     def match_fuzzy(self, sentence):
-        if self.ignore_case:
-            sentence = sentence.lower()
+        sentence = _normalize(sentence, self.ignore_case)
         entities = self.match_entities(sentence)
         for intent, samples in self.registered_intents.items():
             samples = self.registered_intents[intent]
@@ -63,10 +73,9 @@ class IntentContainer:
 
     def add_intent(self, name, lines):
         expanded = []
-        for l in lines:
-            expanded += expand_template(l)
-        if self.ignore_case:
-            expanded = [l.lower() for l in expanded]
+        for line in lines:
+            expanded += expand_template(line)
+        expanded = [_normalize(line, self.ignore_case) for line in expanded]
         self.registered_intents[name] = expanded
 
     def remove_intent(self, name):
@@ -75,10 +84,9 @@ class IntentContainer:
 
     def add_entity(self, name, lines):
         expanded = []
-        for l in lines:
-            expanded += expand_template(l)
-        if self.ignore_case:
-            expanded = [l.lower() for l in expanded]
+        for line in lines:
+            expanded += expand_template(line)
+        expanded = [_normalize(line, self.ignore_case) for line in expanded]
         self.registered_entities[name] = expanded
 
     def remove_entity(self, name):
