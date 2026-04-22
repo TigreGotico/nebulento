@@ -1,7 +1,7 @@
 import re
 import logging
 from nebulento.fuzz import MatchStrategy, match_one
-from nebulento.bracket_expansion import expand_template, expand_slots
+from nebulento.bracket_expansion import expand_template
 import quebra_frases
 
 LOG = logging.getLogger('nebulento')
@@ -42,16 +42,13 @@ class IntentContainer:
         sentence = _normalize(sentence, self.ignore_case)
         entities = self.match_entities(sentence)
         for intent, samples in self.registered_intents.items():
-            samples = self.registered_intents[intent]
 
             sent, score = match_one(sentence, samples,
                                     strategy=self.fuzzy_strategy)
-            remainder = [
-                w for w in quebra_frases.word_tokenize(sentence)
-                if w not in quebra_frases.word_tokenize(sent)]
-            consumed = [
-                w for w in quebra_frases.word_tokenize(sentence)
-                if w in quebra_frases.word_tokenize(sent)]
+            sentence_tokens = quebra_frases.word_tokenize(sentence)
+            sent_tokens = quebra_frases.word_tokenize(sent)
+            remainder = [w for w in sentence_tokens if w not in sent_tokens]
+            consumed = [w for w in sentence_tokens if w in sent_tokens]
 
             tagged_entities = {}
             for ent, v in entities.items():

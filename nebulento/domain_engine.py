@@ -26,7 +26,6 @@ class DomainIntentContainer:
         self.domain_engine = IntentContainer(fuzzy_strategy=fuzzy_strategy, ignore_case=ignore_case)
         self.domains: Dict[str, IntentContainer] = {}
         self.training_data: Dict[str, List[str]] = defaultdict(list)
-        self.must_train = True
 
     def remove_domain(self, domain_name: str):
         """
@@ -56,7 +55,6 @@ class DomainIntentContainer:
                                                         ignore_case=self.ignore_case)
         self.domains[domain_name].add_intent(intent_name, intent_samples)
         self.training_data[domain_name] += intent_samples
-        self.must_train = True
 
     def remove_domain_intent(self, domain_name: str, intent_name: str):
         """
@@ -117,7 +115,7 @@ class DomainIntentContainer:
         Returns:
             MatchData: The best matching intent.
         """
-        domain: str = domain or self.domain_engine.calc_intent(query).name
+        domain: str = domain or self.domain_engine.calc_intent(query).get("name")
         if domain in self.domains:
             return self.domains[domain].calc_intent(query)
         return {"best_match": None,
