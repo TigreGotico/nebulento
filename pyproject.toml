@@ -17,6 +17,13 @@ dependencies = [
     "quebra_frases",
 ]
 
+[project.optional-dependencies]
+benchmark = [
+    "padaos",
+    "padacioso",
+    "padatious",
+]
+
 [project.urls]
 Homepage = "https://github.com/OpenJarbas/nebulento"
 
